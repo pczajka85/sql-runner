@@ -26,19 +26,11 @@ public class App {
 		app.logger.info("STARTING EXECUTE SQL FILES");
 		
 		HibernateUtil.createSessionFactory();
-		Session session = HibernateUtil.getSessionFactory().openSession();
-		session.getTransaction().begin();
-		try{
-			for(File f : app.getSqlFiles()){
-				session.createSQLQuery(app.readSqlFile(f)).executeUpdate();
-			}
-			session.getTransaction().commit();
-		}catch(Exception e){
-			session.getTransaction().rollback();
+		for(File f : app.getSqlFiles()){
+			app.executeSql(f);
 		}
-		session.close();
 		HibernateUtil.getSessionFactory().close();
-		app.logger.info("EXECUTING SQL FILES ENDED");
+		app.logger.info("EXECUTING SQL FILES ENDED SUCCESSFULLY");
 	}
 	
 	private List<File> getSqlFiles(){
@@ -92,4 +84,18 @@ public class App {
 		return line;
 	}
 	
+	private void executeSql(File file){
+		String sql = readSqlFile(file);
+		Session session = HibernateUtil.getSessionFactory().openSession();
+		session.getTransaction().begin();
+		try{
+			session.createSQLQuery(sql).executeUpdate();
+			session.getTransaction().commit();
+			logger.info(file.getName() + " UPDATE SUCCESS");
+		}catch(Exception e){
+			session.getTransaction().rollback();
+			e.printStackTrace();
+		}
+		session.close();
+	}
 }
